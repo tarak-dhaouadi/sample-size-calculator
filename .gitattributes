@@ -1,2 +1,22 @@
-# Auto detect text files and perform LF normalization
+# Normalise line endings: text files are stored with LF in the repository.
 * text=auto
+
+# Source and documentation
+*.java text eol=lf diff=java
+*.md   text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.cff  text eol=lf
+*.sh   text eol=lf
+
+# Windows scripts must keep CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binary files
+*.jpg  binary
+*.png  binary
+*.jar  binary
+
+# Keep GitHub's language statistics focused on the Java code
+docs/** linguist-documentation

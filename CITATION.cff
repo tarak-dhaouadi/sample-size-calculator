@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Tarak Dhaouadi for Sample Size"
+type: software
+version: 1.0.0
+date-released: 2026-10-02
+authors:
+  - family-names: Dhaouadi
+    given-names: Tarak
+repository-code: "https://github.com/tarak-dhaouadi/sample-size-calculator"
+url: "https://github.com/tarak-dhaouadi/sample-size-calculator"
+license: MIT
+abstract: >-
+  A free, dependency-free Java desktop application for sample-size calculation
+  in common biomedical and epidemiological designs: proportions, means,
+  correlations, survival (hazard ratio, log-rank), ANOVA, linear regression
+  and diagnostic accuracy.
+keywords:
+  - sample size
+  - power analysis
+  - biostatistics
+  - epidemiology
+  - Java

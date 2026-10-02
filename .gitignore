@@ -1,0 +1,29 @@
+# Build output
+build/
+dist/
+out/
+target/
+*.class
+
+# Packaged artefacts (publish them through GitHub Releases instead)
+*.jar
+*.zip
+
+# IDE / editor files
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+nbproject/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and crash dumps
+*.log
+hs_err_pid*

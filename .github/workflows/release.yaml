@@ -1,0 +1,32 @@
+name: release
+
+# Publishes the JAR on the Releases page when a version tag is pushed, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Build and test
+        run: VERSION="${GITHUB_REF_NAME#v}" bash ./build.sh test
+
+      - name: Create the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/TarakDhaouadiSampleSize.jar
+          generate_release_notes: true
