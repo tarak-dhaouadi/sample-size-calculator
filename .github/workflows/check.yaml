@@ -46,7 +46,7 @@ jobs:
       # The Java 8 build runs on every newer Java, so one JAR is enough.
       - name: Upload the JAR
         if: matrix.os == 'ubuntu-latest' && matrix.java == '8'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: TarakDhaouadiSampleSize-jar
           path: dist/TarakDhaouadiSampleSize.jar
