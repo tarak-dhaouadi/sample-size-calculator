@@ -18,6 +18,8 @@ final class Result {
     String details = "";
     long nTest, nRef, nTotal;   // filled for two-group designs
     long n;                     // filled for one-group / paired designs
+    /** Builds the two charts for this result on demand (they can take a moment for ANOVA / regression). */
+    java.util.concurrent.Callable<Plots> plotSource;
 }
 
 /** Optional adjustments, applied in the order: rounding, finite population, clustering, response rate. */
@@ -65,7 +67,7 @@ final class Calc {
     /** Rounds the base size up, then applies FPC, clustering and response rate; returns the final rounded-up size. */
     private static double finish(double raw, Adj a, StringBuilder d, String unit) throws InputException {
         checkSize(raw);
-        double n = Math.ceil(raw - 1e-9);
+        double n = Math.max(1, Math.ceil(raw - 1e-9));   // at least one subject
         d.append("Base sample size (rounded up): ").append(int0(n)).append('\n');
         if (a.fpc) {
             double before = n;

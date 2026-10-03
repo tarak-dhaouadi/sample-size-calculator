@@ -2,6 +2,7 @@ package io.github.tarakdhaouadi.samplesize;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -23,6 +24,36 @@ public class ModulesSmokeTest {
         }
     }
 
+    /** Both charts of a result: data present, marker equal to the result, curves in the right direction, drawable. */
+    static void checkPlots(String name, Result r, boolean thorough) {
+        checks++;
+        try {
+            Plots p = r.plotSource.call();
+            long expected = r.n > 0 ? r.n : r.nTest;
+            for (Plot pl : new Plot[]{p.size, p.power}) {
+                if (!pl.hasData()) throw new IllegalStateException("plot without data: " + pl.title);
+                if (Double.isNaN(pl.markY) || Math.round(pl.markY) != expected)
+                    throw new IllegalStateException("marker " + pl.markY + " differs from the result " + expected + " in " + pl.title);
+                for (Plot.Series se : pl.series) for (double v : se.y) if (!Double.isNaN(v) && !(v > 0)) throw new IllegalStateException("bad value " + v);
+            }
+            // the power / confidence curve never decreases
+            double[] y = p.power.series.get(0).y;
+            for (int i = 1; i < y.length; i++)
+                if (!Double.isNaN(y[i]) && !Double.isNaN(y[i - 1]) && y[i] < y[i - 1])
+                    throw new IllegalStateException("power curve decreases at index " + i + " in " + p.power.title);
+            if (thorough) {
+                ChartPanel c = new ChartPanel();
+                for (Plot pl : new Plot[]{p.size, p.power}) {
+                    c.setPlot(pl);
+                    BufferedImage img = c.render(900, 560);
+                    int ink = 0;
+                    for (int yy = 0; yy < img.getHeight(); yy += 2) for (int xx = 0; xx < img.getWidth(); xx += 2) if ((img.getRGB(xx, yy) & 0xFFFFFF) != 0xFFFFFF) ink++;
+                    if (ink < 1500) throw new IllegalStateException("chart looks empty: " + pl.title);
+                }
+            }
+        } catch (Throwable t) { fails++; System.out.println("FAIL plots for " + name + ": " + t); }
+    }
+
     public static void main(String[] args) {
         System.setProperty("java.awt.headless", "true");
         SampleSizeApp.Module[] mods = SampleSizeApp.createModules();
@@ -37,6 +68,7 @@ public class ModulesSmokeTest {
             try {
                 Result r = m.compute();
                 if (r.headline == null || r.headline.isEmpty() || r.interpretation.isEmpty()) throw new IllegalStateException("empty result");
+                checkPlots(m.title, r, true);
             } catch (Throwable t) { fails++; System.out.println("FAIL " + m.title + " with default values: " + t); }
             // 2. random input
             List<JTextField> fields = new ArrayList<>(); List<JComboBox<?>> combos = new ArrayList<>(); List<JCheckBox> boxes = new ArrayList<>();
@@ -46,7 +78,10 @@ public class ModulesSmokeTest {
                 for (JComboBox<?> c : combos) if (rnd.nextInt(2) == 0) c.setSelectedIndex(rnd.nextInt(c.getItemCount()));
                 for (JCheckBox b : boxes) if (rnd.nextInt(2) == 0) b.doClick();
                 checks++;
-                try { m.compute(); }
+                try {
+                    Result rr = m.compute();
+                    if (i % 12 == 0) checkPlots(m.title + " (random input)", rr, i % 60 == 0);   // plots must never crash either
+                }
                 catch (InputException ok) { /* friendly message */ }
                 catch (Throwable t) { fails++; System.out.println("FAIL (crash) " + m.title + ": " + t); break; }
             }

@@ -5,7 +5,7 @@ rem   build.bat test     compile, package, then run the test suites
 rem Optional: set VERSION=1.2.0 before calling to change the version stored in the JAR.
 setlocal
 cd /d "%~dp0"
-if "%VERSION%"=="" set VERSION=1.0.0
+if "%VERSION%"=="" set VERSION=1.1.0
 set PKG=src\main\java\io\github\tarakdhaouadi\samplesize
 set TPKG=src\test\java\io\github\tarakdhaouadi\samplesize
 set MAIN=io.github.tarakdhaouadi.samplesize

@@ -244,12 +244,15 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double c = zeroToOne(cl2, "Level of confidence"), pp = zeroToOne(p, "Expected proportion");
             boolean rel = kind.getSelectedIndex() == 1;
             double d = positive(prec, "Precision (margin of error)");
             if (!rel && d >= 1) throw new InputException("\"Precision (margin of error)\" must be below 1 for an absolute precision.");
             Adj a = new Adj(); fpc.apply(a); cluster.apply(a); resp.apply(a);
-            return Calc.oneProportion(c, pp, d, rel, a);
+            Result res = Calc.oneProportion(c, pp, d, rel, a);
+            res.plotSource = () -> Plots.oneProportion(c, pp, d, rel, a);
+            return res;
         }
     }
     static final class TwoProportions extends Module {
@@ -274,6 +277,7 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             Hyp h = (Hyp) hyp.getSelectedItem();
             double a0 = zeroToOne(p0, "Proportion in reference group");
             double v = num(p1, "Test group value"), a1;
@@ -284,10 +288,14 @@ public class SampleSizeApp {
                 default: a1 = v;
             }
             if (!(a1 > 0 && a1 < 1)) throw new InputException("The resulting proportion in the test group is " + Calc.num(a1) + ", which is outside (0, 1). Please adjust the input.");
+            final double q0 = a0, q1 = a1;
             double m = h == Hyp.EQUALITY ? 0 : positive(margin, "Margin");
             double r = positive(ratio, "Ratio reference : test group");
             Adj a = new Adj(); a.cc = cc.isSelected(); cluster.apply(a); resp.apply(a);
-            return Calc.twoProportions(a0, a1, r, h, m, opt.alpha(), opt.power(), opt.twoSided(), a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.twoProportions(q0, q1, r, h, m, al, pw, ts, a);
+            res.plotSource = () -> Plots.twoProportions(q0, q1, r, h, m, al, pw, ts, a);
+            return res;
         }
     }
     static final class PairedProportions extends Module {
@@ -311,6 +319,7 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double bb, cc2;
             if (mode.getSelectedIndex() == 0) {
                 double a0 = zeroToOne(p0, "Proportion in reference (pre)"), a1 = zeroToOne(p1, "Proportion in comparison (post)");
@@ -320,8 +329,12 @@ public class SampleSizeApp {
             } else {
                 bb = num(b, "Pairs shifting + to - (b)"); cc2 = num(c, "Pairs shifting - to + (c)");
             }
+            final double fb = bb, fc = cc2;
             Adj a = new Adj(); a.cc = cc.isSelected(); cluster.apply(a);
-            return Calc.pairedProportions(bb, cc2, opt.alpha(), opt.power(), opt.twoSided(), a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.pairedProportions(fb, fc, al, pw, ts, a);
+            res.plotSource = () -> Plots.pairedProportions(fb, fc, al, pw, ts, a);
+            return res;
         }
     }
     static final class OneMean extends Module {
@@ -339,9 +352,12 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double c = zeroToOne(cl, "Level of confidence"), s = positive(sd, "Expected standard deviation"), d = positive(prec, "Precision (margin of error)");
             Adj a = new Adj(); a.tDist = t.isSelected(); fpc.apply(a); cluster.apply(a); resp.apply(a);
-            return Calc.oneMean(c, s, d, a);
+            Result res = Calc.oneMean(c, s, d, a);
+            res.plotSource = () -> Plots.oneMean(c, s, d, a);
+            return res;
         }
     }
     static final class TwoMeans extends Module {
@@ -371,13 +387,17 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             Hyp h = (Hyp) hyp.getSelectedItem();
             double d = how.getSelectedIndex() == 0 ? num(m1, "Mean of test group") - num(m0, "Mean of reference group") : num(diff, "Difference (test - reference)");
             double s = positive(sd, "Standard deviation");
             double m = h == Hyp.EQUALITY ? 0 : positive(margin, "Margin");
             double r = positive(ratio, "Ratio reference : test group");
             Adj a = new Adj(); a.tDist = t.isSelected(); cluster.apply(a);
-            return Calc.twoMeans(d, s, r, h, m, opt.alpha(), opt.power(), opt.twoSided(), a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.twoMeans(d, s, r, h, m, al, pw, ts, a);
+            res.plotSource = () -> Plots.twoMeans(d, s, r, h, m, al, pw, ts, a);
+            return res;
         }
     }
     static final class PairedMeans extends Module {
@@ -399,13 +419,19 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             Adj a = new Adj(); a.tDist = t.isSelected(); cluster.apply(a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
             if (how.getSelectedIndex() == 0) {
                 double m = num(mean, "Expected mean of the differences"), s = positive(sd, "Expected SD of the differences");
-                return Calc.pairedMeans(m, s, opt.alpha(), opt.power(), opt.twoSided(), a);
+                Result res = Calc.pairedMeans(m, s, al, pw, ts, a);
+                res.plotSource = () -> Plots.pairedMeans(m, s, al, pw, ts, a);
+                return res;
             }
             double e = Math.abs(num(es, "Expected effect size"));
-            return Calc.pairedMeansES(e, Double.NaN, Double.NaN, opt.alpha(), opt.power(), opt.twoSided(), a);
+            Result res = Calc.pairedMeansES(e, Double.NaN, Double.NaN, al, pw, ts, a);
+            res.plotSource = () -> Plots.pairedMeansES(e, al, pw, ts, a);
+            return res;
         }
     }
 
@@ -428,10 +454,14 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double rr = open(r, "Expected correlation", -1, 1);
             double r00 = spearman ? 0 : open(r0, "Correlation under H0", -1, 1);
             Adj a = new Adj(); resp.apply(a);
-            return Calc.correlation(spearman, rr, r00, opt.alpha(), opt.power(), opt.twoSided(), a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.correlation(spearman, rr, r00, al, pw, ts, a);
+            res.plotSource = () -> Plots.correlation(spearman, rr, r00, al, pw, ts, a);
+            return res;
         }
     }
 
@@ -451,12 +481,16 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double h = positive(hr, "Expected hazard ratio");
             double p = num(pev, "Overall event probability");
             if (!(p > 0 && p <= 1)) throw new InputException("\"Overall event probability\" must be greater than 0 and at most 1.");
             double r = positive(ratio, "Ratio reference : test group");
             Adj a = new Adj(); resp.apply(a);
-            return Calc.hazardRatio(h, r, p, opt.alpha(), opt.power(), opt.twoSided(), a);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.hazardRatio(h, r, p, al, pw, ts, a);
+            res.plotSource = () -> Plots.hazardRatio(h, r, p, al, pw, ts, a);
+            return res;
         }
     }
     static final class LogRank extends Module {
@@ -480,6 +514,7 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             double a0, a1; String note = "";
             if (how.getSelectedIndex() == 0) {
                 a0 = zeroToOne(s0, "Survival in reference group"); a1 = zeroToOne(s1, "Survival in test group");
@@ -488,9 +523,13 @@ public class SampleSizeApp {
                 a0 = Math.exp(-Math.log(2) * t / x0); a1 = Math.exp(-Math.log(2) * t / x1);
                 note = "Medians " + Calc.num(x0) + " (reference) and " + Calc.num(x1) + " (test) over " + Calc.num(t) + " of follow-up give survival " + Calc.num(a0) + " and " + Calc.num(a1) + ".";
             }
+            final double fs0 = a0, fs1 = a1;
             double r = positive(ratio, "Ratio reference : test group");
             Adj a = new Adj(); resp.apply(a);
-            return Calc.logRank(a0, a1, r, opt.alpha(), opt.power(), opt.twoSided(), a, note);
+            final double al = opt.alpha(), pw = opt.power(); final boolean ts = opt.twoSided();
+            Result res = Calc.logRank(fs0, fs1, r, al, pw, ts, a, note);
+            res.plotSource = () -> Plots.logRank(fs0, fs1, r, al, pw, ts, a);
+            return res;
         }
     }
 
@@ -514,6 +553,7 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             int groups; double cf; String note = "";
             if (how.getSelectedIndex() == 0) {
                 groups = integer(k, "Number of groups", 2); cf = positive(f, "Effect size (Cohen's f)");
@@ -533,8 +573,12 @@ public class SampleSizeApp {
                 if (cf == 0) throw new InputException("The group means are all equal, so there is no effect to detect.");
                 note = groups + " group means with SD " + Calc.num(s) + " give Cohen's f = " + Calc.num(cf) + ".";
             }
+            final int fg = groups; final double ff = cf;
             Adj a = new Adj(); resp.apply(a);
-            return Calc.anova(groups, cf, opt.alpha(), opt.power(), a, note);
+            final double al = opt.alpha(), pw = opt.power();
+            Result res = Calc.anova(fg, ff, al, pw, a, note);
+            res.plotSource = () -> Plots.anova(fg, ff, al, pw, a);
+            return res;
         }
     }
     static final class Regression extends Module {
@@ -557,6 +601,7 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             int pp = integer(p, "Total predictors in the model", 1), qq = integer(q, "Predictors being tested", 1);
             double e; String note = "";
             if (how.getSelectedIndex() == 0) e = positive(f2, "Effect size (Cohen's f2)");
@@ -566,8 +611,12 @@ public class SampleSizeApp {
                 e = rt / (1 - rf);
                 note = "Cohen's f2 = R2(tested) / (1 - R2(full)) = " + Calc.num(e) + ".";
             }
+            final double fe = e;
             Adj a = new Adj(); resp.apply(a);
-            return Calc.regression(pp, qq, e, opt.alpha(), opt.power(), a, note);
+            final double al = opt.alpha(), pw = opt.power();
+            Result res = Calc.regression(pp, qq, fe, al, pw, a, note);
+            res.plotSource = () -> Plots.regression(pp, qq, fe, al, pw, a);
+            return res;
         }
     }
     static final class Diagnostic extends Module {
@@ -589,12 +638,15 @@ public class SampleSizeApp {
             return form.finish();
         }
         Result compute() throws InputException {
+
             int w = which.getSelectedIndex();
             double a0 = w != 2 ? zeroToOne(se, "Expected sensitivity") : 0.5, a1 = w != 1 ? zeroToOne(sp, "Expected specificity") : 0.5;
             double pv = zeroToOne(prev, "Disease prevalence"), d = positive(prec, "Precision (margin of error)"), c = zeroToOne(cl, "Level of confidence");
             if (d >= 1) throw new InputException("\"Precision (margin of error)\" must be below 1.");
             Adj a = new Adj(); resp.apply(a);
-            return Calc.diagnostic(w != 2, w != 1, a0, a1, pv, d, c, a);
+            Result res = Calc.diagnostic(w != 2, w != 1, a0, a1, pv, d, c, a);
+            res.plotSource = () -> Plots.diagnostic(w != 2, w != 1, a0, a1, pv, d, c, a);
+            return res;
         }
     }
 
@@ -655,6 +707,86 @@ public class SampleSizeApp {
         }
     }
 
+    // ====================== plots: background drawing, enlarge, save ======================
+    /** Keeps the chart at a pleasant aspect ratio at the top of its tab. */
+    static final class AspectPanel extends JPanel {
+        private final ChartPanel chart;
+        AspectPanel(ChartPanel chart) { super(null); this.chart = chart; add(chart); setBorder(BorderFactory.createEmptyBorder(10, 12, 6, 12)); }
+        @Override public void doLayout() {
+            Insets in = getInsets();
+            int w = getWidth() - in.left - in.right, h = getHeight() - in.top - in.bottom;
+            chart.setBounds(in.left, in.top, Math.max(0, w), Math.max(0, Math.min(h, (int) (w * 0.64))));
+        }
+    }
+
+    static JPanel plotTab(ChartPanel chart, java.util.function.Supplier<String> moduleName, String kind) {
+        JPanel tab = new JPanel(new BorderLayout());
+        AspectPanel holder = new AspectPanel(chart);
+        chart.setBorder(BorderFactory.createLineBorder(new Color(0xD0D4DC)));
+        JButton enlarge = new JButton("Enlarge"), save = new JButton("Save as PNG...");
+        enlarge.addActionListener(e -> enlarge(tab, chart, moduleName.get()));
+        save.addActionListener(e -> savePng(tab, chart, moduleName.get().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "") + "-" + kind + ".png"));
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
+        bar.add(enlarge); bar.add(save);
+        tab.add(holder, BorderLayout.CENTER);
+        tab.add(bar, BorderLayout.SOUTH);
+        return tab;
+    }
+
+    /** Computes the two charts off the screen thread and shows them when ready (ignored if superseded). */
+    static void startPlots(Result r, int[] token, ChartPanel c1, ChartPanel c2, JTabbedPane tabs) {
+        final int mine = ++token[0];
+        if (r.plotSource == null) { c1.setMessage("No plot for this result."); c2.setMessage("No plot for this result."); return; }
+        c1.setMessage("Drawing the plot..."); c2.setMessage("Drawing the plot...");
+        new SwingWorker<Plots, Void>() {
+            @Override protected Plots doInBackground() throws Exception { return r.plotSource.call(); }
+            @Override protected void done() {
+                if (mine != token[0]) return;
+                try {
+                    Plots p = get();
+                    c1.setPlot(p.size); c2.setPlot(p.power);
+                    tabs.setTitleAt(2, p.powerTabTitle);
+                } catch (Exception ex) {
+                    String m = "The plots could not be drawn for these values.";
+                    c1.setMessage(m); c2.setMessage(m);
+                }
+            }
+        }.execute();
+    }
+
+    static void enlarge(Component parent, ChartPanel src, String title) {
+        if (src.getPlot() == null) return;
+        Window w = SwingUtilities.getWindowAncestor(parent);
+        JDialog d = new JDialog(w, title, Dialog.ModalityType.MODELESS);
+        ChartPanel big = new ChartPanel();
+        big.setPlot(src.getPlot());
+        big.setPreferredSize(new Dimension(940, 570));
+        d.setContentPane(big);
+        d.pack();
+        d.setLocationRelativeTo(w);
+        d.setVisible(true);
+    }
+
+    static void savePng(Component parent, ChartPanel src, String defaultName) {
+        if (src.getPlot() == null) {
+            JOptionPane.showMessageDialog(parent, "Click Calculate first to draw the plot.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        JFileChooser fc = new JFileChooser();
+        fc.setSelectedFile(new java.io.File(defaultName));
+        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PNG image (*.png)", "png"));
+        if (fc.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return;
+        java.io.File f = fc.getSelectedFile();
+        if (!f.getName().toLowerCase().endsWith(".png")) f = new java.io.File(f.getPath() + ".png");
+        if (f.exists() && JOptionPane.showConfirmDialog(parent, f.getName() + " already exists. Replace it?", APP_NAME,
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        try {
+            ImageIO.write(src.render(1400, 850), "png", f);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(parent, "The image could not be saved:\n" + ex.getMessage(), APP_NAME, JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // ====================== main window ======================
     /** All calculators, in sidebar order. */
     static Module[] createModules() {
@@ -699,12 +831,27 @@ public class SampleSizeApp {
         results.add(copyBar, BorderLayout.SOUTH);
 
         final String[] lastText = {""};
+
+        // --- plot tabs ---
+        ChartPanel chart1 = new ChartPanel(), chart2 = new ChartPanel();
+        JTabbedPane tabs = new JTabbedPane();
         final Module[] current = {mods[0]};
+        tabs.addTab("Result", results);
+        tabs.addTab("Sample size plot", plotTab(chart1, () -> current[0].title, "sample-size"));
+        tabs.addTab("Power plot", plotTab(chart2, () -> current[0].title, "power"));
+        final int[] token = {0};
+        Runnable resetPlots = () -> {
+            token[0]++;
+            chart1.setMessage("Click Calculate to draw the plots.");
+            chart2.setMessage("Click Calculate to draw the plots.");
+            tabs.setTitleAt(2, "Power plot");
+        };
 
         Runnable clear = () -> {
             headline.setText(" "); headline.setForeground(ACCENT);
             text.setText("Enter your values on the left and click Calculate.");
             copy.setEnabled(false);
+            resetPlots.run();
         };
         Runnable calc = () -> {
             try {
@@ -714,16 +861,19 @@ public class SampleSizeApp {
                 lastText[0] = current[0].title + "\n" + r.headline + "\n\n" + r.interpretation + "\n\nCalculation details\n" + r.details;
                 text.setText(r.interpretation + "\n\nCalculation details\n" + r.details);
                 copy.setEnabled(true);
+                startPlots(r, token, chart1, chart2, tabs);
             } catch (InputException ex) {
                 headline.setForeground(ERROR);
                 headline.setText("Please check your input");
                 text.setText(ex.getMessage());
                 copy.setEnabled(false);
+                resetPlots.run();
             } catch (Exception ex) {
                 headline.setForeground(ERROR);
                 headline.setText("Calculation error");
                 text.setText("Something unexpected went wrong with these values: " + ex);
                 copy.setEnabled(false);
+                resetPlots.run();
             }
             text.setCaretPosition(0);
         };
@@ -756,9 +906,9 @@ public class SampleSizeApp {
         formSide.add(cardPanel, BorderLayout.CENTER);
         formSide.add(btnBar, BorderLayout.SOUTH);
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, formSide, results);
-        split.setResizeWeight(0.5);
-        results.setMinimumSize(new Dimension(300, 200)); formSide.setMinimumSize(new Dimension(420, 200));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, formSide, tabs);
+        split.setResizeWeight(0.4);
+        tabs.setMinimumSize(new Dimension(380, 200)); formSide.setMinimumSize(new Dimension(480, 200));
         split.setBorder(BorderFactory.createEmptyBorder());
         split.setContinuousLayout(true);
         JPanel main = new JPanel(new BorderLayout());
@@ -819,6 +969,7 @@ public class SampleSizeApp {
         root.add(sideScroll, BorderLayout.WEST);
         root.add(main, BorderLayout.CENTER);
         buttons.get(0).doClick();
+        SwingUtilities.invokeLater(() -> split.setDividerLocation(0.48));
         return root;
     }
 
@@ -846,8 +997,9 @@ public class SampleSizeApp {
             JFrame f = new JFrame(APP_NAME);
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setContentPane(buildContent());
-            f.setMinimumSize(new Dimension(980, 640));
-            f.setSize(1180, 760);
+            Dimension scr = Toolkit.getDefaultToolkit().getScreenSize();
+            f.setMinimumSize(new Dimension(1060, 640));
+            f.setSize(Math.min(1340, scr.width - 40), Math.min(780, scr.height - 60));
             f.setLocationRelativeTo(null);
             f.setVisible(true);
         });

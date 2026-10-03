@@ -126,6 +126,39 @@ Buderer (1996): the number of diseased subjects for sensitivity Se is `z²·Se(1
 prevalence to give the total; the number of non-diseased for specificity Sp is `z²·Sp(1 − Sp)/d²`, divided by
 `1 − prevalence`. When both are requested the larger total is returned. *Assumption:* normal approximation.
 
+## Plots
+
+Every calculator draws two plots from the same functions as the result, so the marked point always equals the
+calculated sample size.
+
+* **Sample size plot.** The sample size is computed on a grid of a key input and for three effect sizes:
+  the current effect and two larger ones a round step apart (for example differences of 0.15, 0.20 and 0.25), so
+  the first curve is the one that passes through the current result. For hazard-ratio designs the two stronger
+  curves are hazard ratios further from 1; for correlation designs and the paired effect-size calculator the three
+  curves are three power levels (the current power and the next two usual levels).
+
+  | Calculator | x axis | Curves |
+  |---|---|---|
+  | Single proportion | expected proportion | precision |
+  | Two proportions | proportion in the reference group | difference in proportions |
+  | Paired proportions | proportion of discordant pairs (b + c) | difference c − b |
+  | Single mean | standard deviation | precision |
+  | Two means / paired differences | standard deviation | mean difference |
+  | Pearson / Spearman | expected correlation | power level |
+  | Hazard ratio | overall probability of the event | hazard ratio |
+  | Log-rank | survival proportion in the reference group (S₁ = S₀<sup>HR</sup>) | hazard ratio |
+  | ANOVA | number of groups | Cohen's f |
+  | Regression | number of predictors tested | Cohen's f² |
+  | Diagnostic accuracy | disease prevalence | precision |
+
+  When a steep low-end tail would flatten the rest of the plot, the view zooms on the part within three times the
+  current result and the curves run off the top of the frame. Points where the inputs are impossible (for example a
+  test-group proportion above 1) are left out.
+* **Power plot.** The sample size for powers from 0.50 to 0.99. For the estimation designs (single proportion,
+  single mean, diagnostic accuracy), which have no power, the x axis is the confidence level from 0.80 to 0.99.
+  The y axis is the size per group for two-group designs, the number of pairs for paired designs and the total
+  sample size otherwise. All other inputs and adjustments are kept as entered.
+
 ## Validation
 
 The tests in [`CalcTest.java`](../src/test/java/io/github/tarakdhaouadi/samplesize/CalcTest.java)
@@ -140,7 +173,9 @@ The tests in [`CalcTest.java`](../src/test/java/io/github/tarakdhaouadi/samplesi
    for d = 0.2 / 0.5 / 0.8, paired t-test 90).
 3. **Properties that must always hold** (more power or a smaller α needs more subjects, a larger effect needs
    fewer, one-sided needs fewer than two-sided, ratio r and 1/r need the same total, and so on).
-4. **Robustness**: thousands of random and extreme inputs must produce either a result or a clear
+4. **Plots**: the marked point equals the calculated result for every calculator, the power and confidence curves never
+   decrease, and every plot can be drawn.
+5. **Robustness**: thousands of random and extreme inputs must produce either a result or a clear
    input-error message, never a crash. `ModulesSmokeTest.java` does the same through every calculator panel.
 
 ### Known differences from Statulator

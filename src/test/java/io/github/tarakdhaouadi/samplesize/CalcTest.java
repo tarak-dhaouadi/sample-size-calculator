@@ -33,6 +33,7 @@ public class CalcTest {
         survival();
         otherDesigns();
         invariants();
+        plotHelpers();
         errors();
         fuzz();
         System.out.println(checks + " checks, " + fails + " failure(s)");
@@ -169,6 +170,33 @@ public class CalcTest {
                         < Calc.twoProportions(.5, .55, 1, Hyp.EQUALITY, 0, .05, .8, true, adj()).nTest);
     }
 
+    // ---------------------------------------------------------------- helpers used by the charts
+    static void plotHelpers() {
+        near("niceStep .0375 -> .05", Plots.niceStep(0.0375), 0.05, 1e-12);
+        near("niceStep .05 -> .05", Plots.niceStep(0.05), 0.05, 1e-12);
+        near("niceStep 1.25 -> 1", Plots.niceStep(1.25), 1, 1e-12);
+        double[] e = Plots.effects(0.2, 0.05);
+        near("effects .2 -> .25", e[1], 0.25, 1e-12); near("effects .2 -> .3", e[2], 0.30, 1e-12);
+        e = Plots.effects(0.15, 0.05);
+        near("effects .15 -> .2", e[1], 0.20, 1e-12); near("effects .15 -> .25", e[2], 0.25, 1e-12);
+        e = Plots.effects(-0.2, 0.05);
+        near("negative effects go the same way", e[1], -0.25, 1e-12);
+        e = Plots.effects(0, 0.05);
+        near("zero effect uses additive steps", e[2], 0.10, 1e-12);
+        double[] lv = Plots.powerLevels(0.8);
+        near("power levels 0.8/0.9/0.95", lv[0] + lv[1] + lv[2], 0.8 + 0.9 + 0.95, 1e-12);
+        isTrue("power levels at 0.999 still give 3 curves", Plots.powerLevels(0.999).length == 3);
+        double[] hr = Plots.ratioEffects(0.7);
+        isTrue("hazard ratio effects get stronger", hr[1] < hr[0] && hr[2] < hr[1]);
+        hr = Plots.ratioEffects(1.5);
+        isTrue("hazard ratio above 1 gets stronger upwards", hr[1] > hr[0] && hr[2] > hr[1]);
+        java.util.List<Double> t = ChartPanel.ticks(0, 1, 5, false);
+        isTrue("ticks cover 0..1", t.get(0) == 0.0 && Math.abs(t.get(t.size() - 1) - 1.0) < 1e-9);
+        java.util.List<Double> ti = ChartPanel.ticks(1.9, 10.2, 7, true);
+        boolean whole = true; for (double v : ti) if (v != Math.rint(v)) whole = false;
+        isTrue("integer ticks are whole numbers", whole);
+    }
+
     // ---------------------------------------------------------------- invalid input is reported, not thrown
     static void errors() {
         expectError("equal proportions", () -> Calc.twoProportions(.5, .5, 1, Hyp.EQUALITY, 0, .05, .8, true, adj()));
@@ -177,6 +205,7 @@ public class CalcTest {
         expectError("non-inferiority already violated", () -> Calc.twoMeans(-5, 10, 1, Hyp.NONINFERIORITY, 3, .05, .8, true, adj()));
         expectError("hazard ratio of 1", () -> Calc.hazardRatio(1, 1, .5, .05, .8, true, adj()));
         expectError("identical correlation", () -> Calc.correlation(false, .3, .3, .05, .8, true, adj()));
+        try { eq("a near-zero confidence level still needs at least 1 subject", Calc.oneProportion(1e-9, .5, .05, false, adj()).n, 1); } catch (InputException e) { fails++; System.out.println("FAIL near-zero confidence: " + e.getMessage()); }
         expectError("one ANOVA group", () -> Calc.anova(1, .25, .05, .8, adj(), ""));
         expectError("inconsistent marginals", () -> Calc.discordantFromMarginals(.1, .9, .99));
     }

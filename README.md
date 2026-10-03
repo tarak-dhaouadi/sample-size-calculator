@@ -11,6 +11,19 @@ each result.
 
 ![Screenshot](docs/screenshot.png)
 
+### Plots for every design
+
+Each calculator draws two plots next to the result, with your current result marked by a star:
+
+| Sample size plot | Power plot |
+|---|---|
+| ![Sample size plot](docs/plot-sample-size.png) | ![Power plot](docs/plot-power.png) |
+
+The *sample size plot* shows how the sample size changes with a key input (for example the expected
+proportion in the reference group) for three effect sizes. The *power plot* shows the sample size needed for
+each power from 50 % to 99 % (for the estimation designs, for each confidence level from 80 % to 99 %).
+Use **Enlarge** to open a plot in its own window or **Save as PNG...** to export it at 1400 x 850 pixels.
+
 ## Calculators
 
 | Group | Calculators |
@@ -21,6 +34,7 @@ each result.
 | **Survival** | Hazard ratio · Log-rank test |
 | **Other designs** | One-way ANOVA · Linear regression · Diagnostic accuracy (sensitivity / specificity) |
 
+Every calculator also shows its result with the formula inputs and each intermediate step.
 Two-group comparisons support equality, non-inferiority, superiority and equivalence designs and any
 allocation ratio. Optional adjustments: continuity correction, finite population, clustering (ICC or design
 effect), response rate and t-distribution.
@@ -57,7 +71,8 @@ On Windows, `run.bat` starts the JAR built in `dist\`.
 ```
 .github/workflows/    continuous integration (check.yaml) and release (release.yaml)
 docs/                 METHODS.md (formulas, assumptions, validation) and the screenshot
-src/main/java/...     Calc.java (formulas) · Stats.java (distributions) · SampleSizeApp.java (user interface)
+src/main/java/...     Calc.java (formulas) · Stats.java (distributions) · Plots.java (plot data)
+                      ChartPanel.java (chart drawing) · SampleSizeApp.java (user interface)
 src/main/resources/   photo.jpg shown in the application header
 src/test/java/...     CalcTest.java (numerical tests) · ModulesSmokeTest.java (every calculator panel)
 build.sh, build.bat   build scripts (output in build/ and dist/, both ignored by Git)
